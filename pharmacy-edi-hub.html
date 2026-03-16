@@ -105,6 +105,10 @@ h1 { font-size: 26px; font-weight: 600; line-height: 1.2; margin-bottom: 8px; }
 .edi-table tr:last-child td { border-bottom: none; }
 .edi-table td:first-child { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--text); white-space: nowrap; }
 .edi-table td:nth-child(2) { color: var(--text); }
+.edi-row { cursor: pointer; transition: background .12s; }
+.edi-row:hover { background: var(--surface2); }
+.edi-row:hover .row-arrow { opacity: 1; color: var(--accent); }
+.row-arrow { font-size: 14px; color: var(--dim); opacity: 0; transition: opacity .12s; text-align: center; }
 .pill { display: inline-block; font-family: var(--mono); font-size: 11px; font-weight: 500; padding: 2px 7px; border-radius: 4px; margin-right: 3px; }
 .p-teal { background:var(--c-teal-fill); color:var(--c-teal-text); }
 .p-coral { background:var(--c-coral-fill); color:var(--c-coral-text); }
@@ -315,18 +319,18 @@ textarea:focus { border-color: var(--accent); }
   </div>
 
   <div class="card">
-    <p class="section-label">EDI transaction reference</p>
+    <p class="section-label">EDI transaction reference <span style="font-size:11px;font-weight:400;color:var(--dim);letter-spacing:0;text-transform:none;">— click any row to see the full transaction in the flow trainer</span></p>
     <table class="edi-table">
-      <thead><tr><th>Tx</th><th>Name</th><th>Direction</th><th>Purpose</th></tr></thead>
+      <thead><tr><th>Tx</th><th>Name</th><th>Direction</th><th>Purpose</th><th style="width:28px;"></th></tr></thead>
       <tbody>
-        <tr><td><span class="pill p-teal">850</span></td><td>Purchase Order</td><td>Pharmacy → McKesson</td><td>The order itself. All downstream transactions reference this PO number.</td></tr>
-        <tr><td><span class="pill p-teal">855</span></td><td>PO Acknowledgment</td><td>McKesson → Pharmacy</td><td>Line-level accept / modify / reject. IA = accepted. IB = changed. IR = rejected.</td></tr>
-        <tr><td><span class="pill p-teal">856</span></td><td>Advance Ship Notice</td><td>McKesson → Pharmacy</td><td>Carton detail with lot numbers and expiry dates. Required by DSCSA.</td></tr>
-        <tr><td><span class="pill p-teal">810</span></td><td>Invoice</td><td>McKesson → Pharmacy</td><td>What you owe. Price vs. contract delta here triggers the 844 chargeback.</td></tr>
-        <tr><td><span class="pill p-teal">820</span></td><td>Payment Remittance</td><td>Pharmacy → McKesson</td><td>Net payment with credits applied. Closes the financial loop on the 810.</td></tr>
-        <tr><td><span class="pill p-coral">844</span></td><td>Chargeback Claim</td><td>McKesson → Manufacturer</td><td>Filed by McKesson on pharmacy's behalf. Claims WAC-vs-contract delta.</td></tr>
-        <tr><td><span class="pill p-coral">849</span></td><td>Chargeback Response</td><td>Manufacturer → McKesson</td><td>Accept or deny per line. Denial triggers dispute workflow.</td></tr>
-        <tr><td><span class="pill p-coral">867</span></td><td>Resale Report</td><td>McKesson → Manufacturer</td><td>Actual dispensed quantities. Validates 844 claims. Feeds manufacturer market share.</td></tr>
+        <tr class="edi-row" onclick="goToTrainer(2)" title="Open in Transaction Flow"><td><span class="pill p-teal">850</span></td><td>Purchase Order</td><td>Pharmacy → McKesson</td><td>The order itself. All downstream transactions reference this PO number.</td><td class="row-arrow">→</td></tr>
+        <tr class="edi-row" onclick="goToTrainer(3)" title="Open in Transaction Flow"><td><span class="pill p-teal">855</span></td><td>PO Acknowledgment</td><td>McKesson → Pharmacy</td><td>Line-level accept / modify / reject. IA = accepted. IB = changed. IR = rejected.</td><td class="row-arrow">→</td></tr>
+        <tr class="edi-row" onclick="goToTrainer(4)" title="Open in Transaction Flow"><td><span class="pill p-teal">856</span></td><td>Advance Ship Notice</td><td>McKesson → Pharmacy</td><td>Carton detail with lot numbers and expiry dates. Required by DSCSA.</td><td class="row-arrow">→</td></tr>
+        <tr class="edi-row" onclick="goToTrainer(6)" title="Open in Transaction Flow"><td><span class="pill p-teal">810</span></td><td>Invoice</td><td>McKesson → Pharmacy</td><td>What you owe. Price vs. contract delta here triggers the 844 chargeback.</td><td class="row-arrow">→</td></tr>
+        <tr class="edi-row" onclick="goToTrainer(8)" title="Open in Transaction Flow"><td><span class="pill p-teal">820</span></td><td>Payment Remittance</td><td>Pharmacy → McKesson</td><td>Net payment with credits applied. Closes the financial loop on the 810.</td><td class="row-arrow">→</td></tr>
+        <tr class="edi-row" onclick="goToTrainer(7)" title="Open in Transaction Flow"><td><span class="pill p-coral">844</span></td><td>Chargeback Claim</td><td>McKesson → Manufacturer</td><td>Filed by McKesson on pharmacy's behalf. Claims WAC-vs-contract delta.</td><td class="row-arrow">→</td></tr>
+        <tr class="edi-row" onclick="goToTrainer(7)" title="Open in Transaction Flow"><td><span class="pill p-coral">849</span></td><td>Chargeback Response</td><td>Manufacturer → McKesson</td><td>Accept or deny per line. Denial triggers dispute workflow.</td><td class="row-arrow">→</td></tr>
+        <tr class="edi-row" onclick="goToTrainer(7)" title="Open in Transaction Flow"><td><span class="pill p-coral">867</span></td><td>Resale Report</td><td>McKesson → Manufacturer</td><td>Actual dispensed quantities. Validates 844 claims. Feeds manufacturer market share.</td><td class="row-arrow">→</td></tr>
       </tbody>
     </table>
   </div>
@@ -398,6 +402,13 @@ textarea:focus { border-color: var(--accent); }
 </div><!-- end shell -->
 
 <script>
+function goToTrainer(stepIdx) {
+  var trainerTab = document.querySelector('.nav-tab:nth-child(2)');
+  showPage('trainer', trainerTab);
+  if (!trainerInit) initTrainer();
+  goTo(stepIdx);
+}
+
 /* ── Page switching ── */
 function showPage(id, el) {
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
