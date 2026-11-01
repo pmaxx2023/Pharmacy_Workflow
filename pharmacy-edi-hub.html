@@ -51,6 +51,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 }
 .brand { font-size: 14px; font-weight: 600; color: var(--text); margin-right: 32px; white-space: nowrap; }
 .brand span { color: var(--accent); }
+a.brand { text-decoration: none; }
 .nav-tabs { display: flex; gap: 0; height: 100%; }
 .nav-tab {
   font-size: 13px; font-weight: 500; padding: 0 18px;
@@ -223,7 +224,7 @@ textarea:focus { border-color: var(--accent); }
 
 <!-- Top nav -->
 <nav class="topnav">
-  <div class="brand">Pharmacy <span>EDI</span> Hub</div>
+  <a class="brand" href="index.html">Pharmacy <span>EDI</span> Hub</a>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('map',this)">Player map</button>
     <button class="nav-tab" onclick="showPage('trainer',this)">
@@ -632,11 +633,26 @@ function parseSegs(raw) {
   return segs;
 }
 
+// Returns a reason string if the input does not look like an X12 message, else null.
+function x12Problem(raw, segs) {
+  if(raw.indexOf('~')<0) return 'No ~ segment terminator found';
+  var env=false;
+  for(var i=0;i<segs.length;i++){
+    var id=segs[i][0];
+    if(!/^[A-Z][A-Z0-9]{1,2}$/.test(id)) return 'Unrecognized segment ID "'+id.slice(0,20)+'" in segment '+(i+1);
+    if(id==='ISA'||id==='GS'||id==='ST') env=true;
+  }
+  if(!env) return 'No ISA, GS, or ST envelope segment found';
+  return null;
+}
+
 function doTranslate() {
   var raw=document.getElementById('edi-in').value;
   if(!raw||!raw.trim()){ setTS('paste EDI first',false); return; }
   var segs; try{ segs=parseSegs(raw); }catch(e){ setTS('parse error',false); setOut('// Error: '+e.message); return; }
   if(!segs.length){ setTS('no segments found',false); setOut('// No ~ terminated segments found.'); return; }
+  var problem=x12Problem(raw,segs);
+  if(problem){ setTS('not an X12 message',false); setOut('// Error: '+problem+'.\n// Expected an X12 850: ISA/GS/ST envelope, elements separated by *, segments ending in ~.'); return; }
   try {
     var r={interchange:{},functionalGroup:{},purchaseOrder:{header:{},references:[],dates:[],parties:[],lineItems:[]}};
     var po=r.purchaseOrder; var i=0;
